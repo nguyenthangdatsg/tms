@@ -1,0 +1,101 @@
+name: Tests
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+
+jobs:
+  unit-tests:
+    runs-on: ubuntu-latest
+    
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: root
+          MYSQL_DATABASE: moodle
+          MYSQL_USER: moodleuser
+          MYSQL_PASSWORD: moodlepass
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=5
+
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          extensions: mbstring, xml, gd, mysql, pdo_mysql
+      
+      - name: Install dependencies
+        run: |
+          composer install --no-interaction --prefer-dist
+          
+      - name: Create .env file
+        run: |
+          cp .env.example .env
+          php artisan key:generate
+          
+      - name: Run Unit Tests
+        run: php vendor/bin/phpunit --testsuite=Unit
+        
+  dusk-tests:
+    runs-on: ubuntu-latest
+    
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: root
+          MYSQL_DATABASE: moodle
+          MYSQL_USER: moodleuser
+          MYSQL_PASSWORD: moodlepass
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=5
+      
+      selenium:
+        image: selenium/standalone-chrome
+        ports:
+          - 4444:4444
+          - 7900:7900
+
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          extensions: mbstring, xml, gd, mysql, pdo_mysql
+      
+      - name: Install dependencies
+        run: |
+          composer install --no-interaction --prefer-dist
+          
+      - name: Create .env file
+        run: |
+          cp .env.example .env
+          php artisan key:generate
+          
+      - name: Start Laravel Server
+        run: |
+          php artisan serve --port=8000 &
+          sleep 5
+          
+      - name: Run Dusk Tests
+        run: php artisan dusk --headless
+        env:
+          APP_URL: http://127.0.0.1:8000

@@ -1,0 +1,96 @@
+/* ==============================================
+   Loading Indicator Styles - Shared for all components
+   ============================================== */
+
+/* Global Loading Overlay - Centered on screen */
+.loading-overlay-center {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: white;
+  border-radius: 1rem;
+  padding: 3rem 2rem;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
+  z-index: 9999;
+  text-align: center;
+  animation: fadeInScale 0.3s ease-out;
+  min-width: 250px;
+}
+
+.loading-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.loading-content .spinner-border {
+  width: 3rem;
+  height: 3rem;
+  border-width: 0.35em;
+  color: #2563eb;
+}
+
+.loading-content p {
+  font-size: 1rem;
+  letter-spacing: 0.5px;
+  margin-top: 1rem;
+  color: #1e293b;
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
+/* Animations */
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.6;
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes fadeInScale {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+  }
+}
+
+/* Opacity and disabled states */
+.opacity-50 {
+  opacity: 0.5 !important;
+}
+
+.opacity-30 {
+  opacity: 0.3 !important;
+}
+
+/* Button disabled during loading */
+[wire:loading.attr*="disabled"] {
+  cursor: not-allowed;
+  pointer-events: none;
+  opacity: 0.6;
+}

@@ -1,0 +1,1 @@
+@include('livewire.exam.index')
