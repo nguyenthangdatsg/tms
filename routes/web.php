@@ -1,7 +1,7 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
-use App\Livewire\Home;
+use App\Livewire\Dashboard;
 use App\Livewire\CatalogueManagement;
 use App\Livewire\Exam;
 use App\Livewire\OnlineCourse;
@@ -21,7 +21,7 @@ use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 require_once dirname(__DIR__) . '/app/Helpers/LangHelper.php';
 
 Route::middleware('initlang')->group(function () {
-    Route::match(['GET', 'POST'], '/tms', Home::class);
+    Route::match(['GET', 'POST'], '/tms', Dashboard::class);
     Route::match(['GET', 'POST'], '/tms/exam', Exam::class);
     Route::match(['GET', 'POST'], '/tms/online-course', OnlineCourse::class);
     Route::match(['GET', 'POST'], '/tms/offline-course', OfflineCourse::class);
