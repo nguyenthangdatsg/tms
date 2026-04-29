@@ -149,11 +149,14 @@
                                     <table class="table table-sm table-hover mb-0">
                                         <tbody>
                                             @foreach($this->availableUsers as $user)
-                                                <tr>
-                                                    <td>
-                                                        <input class="form-check-input" type="checkbox" 
-                                                               wire:model="selectedUserIds" 
-                                                               value="{{ $user->id }}">
+                                                <tr class="{{ in_array($user->id, $selectedUserIds) ? 'table-primary' : '' }}"
+                                                    style="cursor: pointer;"
+                                                    wire:click="toggleUserSelection({{ $user->id }})">
+                                                    <td style="width: 40px;">
+                                                        <input type="checkbox" 
+                                                               class="form-check-input" 
+                                                               id="user-{{ $user->id }}"
+                                                               {{ in_array($user->id, $selectedUserIds) ? 'checked' : '' }}>
                                                     </td>
                                                     <td>
                                                         <strong>{{ $user->firstname }} {{ $user->lastname }}</strong>

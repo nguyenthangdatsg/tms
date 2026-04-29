@@ -10,7 +10,8 @@ class LearningPathService
     {
         return DB::select("
             SELECT lp.*,
-                (SELECT COUNT(*) FROM mdl_local_learningpath_users WHERE lpt_id = lp.id) as enrolled_count
+                (SELECT COUNT(*) FROM mdl_local_learningpath_users WHERE lpt_id = lp.id) as enrolled_count,
+                (SELECT COALESCE(SUM(credit), 0) FROM mdl_local_learningpath_lines WHERE lpt_id = lp.id) as total_credit
             FROM mdl_local_learningpath lp
             ORDER BY id ASC
         ");
@@ -227,6 +228,12 @@ class LearningPathService
         return true;
     }
 
+    public static function updateLearningPathLineCredit(int $lineId, int $credit): bool
+    {
+        DB::update('UPDATE mdl_local_learningpath_lines SET credit = ? WHERE id = ?', [(int)$credit, $lineId]);
+        return true;
+    }
+
     public static function getLearningPathUsers(int $lptId): array
     {
         $enrolledCohorts = DB::select('SELECT cohort_id FROM mdl_local_learningpath_cohorts WHERE lpt_id = ?', [$lptId]);
@@ -279,8 +286,12 @@ class LearningPathService
         foreach ($users as $user) {
             $completedCount = 0;
             $totalCount = count($requiredCourses);
+            $completedCredit = 0;
+            $totalCredit = 0;
 
             foreach ($requiredCourses as $course) {
+                $totalCredit += (int)($course->credit ?? 0);
+                
                 $completion = DB::selectOne("
                     SELECT id FROM mdl_course_completions
                     WHERE userid = ? AND course = ? AND timecompleted IS NOT NULL AND timecompleted > 0
@@ -288,16 +299,21 @@ class LearningPathService
 
                 if ($completion) {
                     $completedCount++;
+                    $completedCredit += (int)($course->credit ?? 0);
                 }
             }
 
             $progress = $totalCount > 0 ? round(($completedCount / $totalCount) * 100) : 0;
+            $creditProgress = $totalCredit > 0 ? round(($completedCredit / $totalCredit) * 100) : 0;
 
             $result[] = [
                 'user' => $user,
                 'completed_count' => $completedCount,
                 'total_count' => $totalCount,
+                'completed_credit' => $completedCredit,
+                'total_credit' => $totalCredit,
                 'progress' => $progress,
+                'credit_progress' => $creditProgress,
             ];
         }
 

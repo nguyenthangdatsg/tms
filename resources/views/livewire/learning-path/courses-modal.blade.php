@@ -77,57 +77,73 @@
                             @endif
                         </div>
                     </div>
-                    <div class="col-md-7">
-                         <h6>{{ __t('assigned_courses') }}</h6>
-                         <div class="border rounded" style="max-height: 350px; overflow-y: auto;">
-                             @forelse($pathCourses as $index => $course)
-                             <div class="row g-0 p-2 border-bottom align-items-center">
-                                 <div class="col-1">
-                                     <span class="badge bg-secondary">{{ $index + 1 }}</span>
-                                 </div>
-                                 <div class="col-6">
-                                     @if($course->course_type == 'moodle')
-                                         <a href="{{ config('app.moodle_url') }}/course/view.php?id={{ $course->course_id }}" target="_blank" class="text-decoration-none d-block text-truncate">
-                                             {{ $course->fullname ?: __t('course_fallback') . ' (' . $course->course_id . ')' }}
-                                         </a>
-                                         <small><span class="badge bg-primary">{{ __t('special') }}</span></small>
-                                     @else
-                                         @if(isset($course->moodle_course_id))
-                                             <a href="{{ config('app.moodle_url') }}/course/view.php?id={{ $course->moodle_course_id }}" target="_blank" class="text-decoration-none d-block text-truncate">
-                                                 {{ $course->catalogue_name ?: $course->catalogue_code }}
-                                             </a>
-                                         @else
-                                             <span class="d-block text-truncate">{{ $course->catalogue_name ?: $course->catalogue_code }}</span>
-                                         @endif
-                                         <small><span class="badge bg-info">{{ $course->catalogue_code }}</span></small>
-                                     @endif
-                                 </div>
-                                  <div class="col-3">
-                                      <div class="form-check ms-2">
-                                          <input type="checkbox" class="form-check-input" id="required-{{ $course->id }}" 
-                                              {{ $course->required ? 'checked' : '' }} 
-                                              wire:click="updateCourseRequired({{ $course->id }}, {{ $course->required ? 0 : 1 }})">
-                                          <label class="form-check-label" for="required-{{ $course->id }}">
-                                              {{ __t('required') }}
-                                          </label>
-                                      </div>
+                      <div class="col-md-7">
+                          <h6>{{ __t('assigned_courses') }}</h6>
+                          <div class="border rounded" style="max-height: 350px; overflow-y: auto;">
+                              <div class="row g-0 p-2 border-bottom bg-light fw-bold d-none d-md-flex">
+                                  <div class="col-md-6">{{ __t('course') }}</div>
+                                  <div class="col-md-3 text-center">{{ __t('required') }}</div>
+                                  <div class="col-md-2 text-center">{{ __t('credit') }}</div>
+                                  <div class="col-md-1 text-center">{{ __t('actions') }}</div>
+                              </div>
+                              @forelse($pathCourses as $index => $course)
+                              <div class="row g-0 p-2 border-bottom align-items-center">
+                                  <div class="col-md-6">
+                                      @if($course->course_type == 'moodle')
+                                          <a href="{{ config('app.moodle_url') }}/course/view.php?id={{ $course->course_id }}" target="_blank" class="text-decoration-none d-block text-truncate">
+                                              {{ $course->fullname ?: __t('course_fallback') . ' (' . $course->course_id . ')' }}
+                                          </a>
+                                          <small><span class="badge bg-primary">{{ __t('special') }}</span></small>
+                                      @else
+                                          @if(isset($course->moodle_course_id))
+                                              <a href="{{ config('app.moodle_url') }}/course/view.php?id={{ $course->moodle_course_id }}" target="_blank" class="text-decoration-none d-block text-truncate">
+                                                  {{ $course->catalogue_name ?: $course->catalogue_code }}
+                                              </a>
+                                          @else
+                                              <span class="d-block text-truncate">{{ $course->catalogue_name ?: $course->catalogue_code }}</span>
+                                          @endif
+                                          <small><span class="badge bg-info">{{ $course->catalogue_code }}</span></small>
+                                      @endif
                                   </div>
-                                 <div class="col-2 text-end">
-                                     <button wire:click="removeCourseFromPath({{ $course->id }})" class="btn btn-sm btn-outline-danger" wire:loading.attr="disabled">
-                                         <i class="bi bi-x" wire:loading.remove></i>
-                                         <span wire:loading><i class="spinner-border spinner-border-sm"></i></span>
-                                     </button>
-                                 </div>
-                             </div>
-                             @empty
-                             <p class="text-muted p-3 mb-0">{{ __t('no_assigned_courses') }}</p>
-                             @endforelse
-                         </div>
-                     </div>
+                                   <div class="col-md-3 text-center">
+                                       <div class="form-check d-flex justify-content-center">
+                                           <input type="checkbox" class="form-check-input" id="required-{{ $course->id }}" 
+                                               {{ $course->required ? 'checked' : '' }} 
+                                               wire:click="updateCourseRequired({{ $course->id }}, {{ $course->required ? 0 : 1 }})">
+                                           <label class="form-check-label ms-1" for="required-{{ $course->id }}">
+                                               <span class="d-md-none">{{ __t('required') }}: </span>
+                                           </label>
+                                       </div>
+                                   </div>
+                                   <div class="col-md-2">
+                                       <select wire:model="pathCourses.{{ $index }}.credit" class="form-select form-select-sm" wire:change="updateCourseCredit({{ $course->id }}, $event.target.value)">
+                                           <option value="0">0</option>
+                                           @for($i = 1; $i <= 10; $i++)
+                                               <option value="{{ $i }}" {{ ($course->credit ?? 0) == $i ? 'selected' : '' }}>{{ $i }}</option>
+                                           @endfor
+                                       </select>
+                                   </div>
+                                  <div class="col-md-1 text-center">
+                                      <button wire:click="removeCourseFromPath({{ $course->id }})" class="btn btn-sm btn-outline-danger" wire:loading.attr="disabled">
+                                          <i class="bi bi-x" wire:loading.remove></i>
+                                          <span wire:loading><i class="spinner-border spinner-border-sm"></i></span>
+                                      </button>
+                                  </div>
+                              </div>
+                              @empty
+                              <p class="text-muted p-3 mb-0">{{ __t('no_assigned_courses') }}</p>
+                              @endforelse
+                          </div>
+                      </div>
                 </div>
             </div>
             <div class="modal-footer">
                 <button wire:click="closeCoursesModal()" type="button" class="btn btn-secondary">{{ __t('close') }}</button>
+                <button wire:click="saveCourses()" type="button" class="btn btn-primary" wire:loading.attr="disabled">
+                    <i class="bi bi-check-circle" wire:loading.remove></i>
+                    <span wire:loading><i class="spinner-border spinner-border-sm me-2"></i></span>
+                    {{ __t('save') }}
+                </button>
             </div>
         </div>
     </div>

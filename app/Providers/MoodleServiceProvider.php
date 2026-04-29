@@ -410,6 +410,11 @@ class MoodleServiceProvider extends ServiceProvider
                     return LearningPathService::updateLearningPathLineRequired($lineId, $required);
                 }
 
+                public static function updateLearningPathLineCredit(int $lineId, int $credit): bool
+                {
+                    return LearningPathService::updateLearningPathLineCredit($lineId, $credit);
+                }
+
                 public static function getLearningPathUsers(int $lptId): array
                 {
                     return LearningPathService::getLearningPathUsers($lptId);

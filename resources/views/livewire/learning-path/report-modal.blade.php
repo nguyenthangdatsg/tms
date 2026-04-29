@@ -11,10 +11,12 @@
                     <table class="table table-sm table-hover mb-0">
                         <thead class="table-light">
                             <tr>
-                                <th>User</th>
-                                <th>Progress</th>
-                                <th>Completed</th>
-                                <th>Total</th>
+                                <th>{{ __t('user') }}</th>
+                                <th>{{ __t('progress') }}</th>
+                                <th>{{ __t('completed') }}</th>
+                                <th>{{ __t('total') }}</th>
+                                <th>{{ __t('credit_completed') }}</th>
+                                <th>{{ __t('credit_total') }}</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -28,6 +30,12 @@
                                 </td>
                                 <td>{{ $item['completed_count'] ?? 0 }}</td>
                                 <td>{{ $item['total_count'] ?? 0 }}</td>
+                                <td>
+                                    <div class="progress" style="height: 1rem;">
+                                        <div class="progress-bar bg-success" role="progressbar" style="width: {{ $item['credit_progress'] ?? 0 }}%;" aria-valuenow="{{ $item['credit_progress'] ?? 0 }}" aria-valuemin="0" aria-valuemax="100">{{ ($item['completed_credit'] ?? 0) }}/{{ ($item['total_credit'] ?? 0) }}</div>
+                                    </div>
+                                </td>
+                                <td>{{ ($item['total_credit'] ?? 0) }}</td>
                             </tr>
                             @endforeach
                         </tbody>
@@ -35,7 +43,7 @@
                 </div>
             </div>
             <div class="modal-footer">
-                <button class="btn btn-secondary" wire:click="closeReportModal()">Close</button>
+                <button class="btn btn-secondary" wire:click="closeReportModal()">{{ __t('close') }}</button>
             </div>
         </div>
     </div>

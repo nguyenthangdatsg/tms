@@ -136,24 +136,21 @@ class OrganizationService
 
     public static function addUserToOrganization(int $orgId, int $userId, string $role = 'member'): bool
     {
+        // Remove user from ALL organizations (1 user = 1 department rule)
         DB::delete('DELETE FROM mdl_org_unit_user WHERE user_id = ?', [$userId]);
 
-        $orgIds = self::getOrgAndChildIds($orgId);
-        foreach ($orgIds as $oid) {
-            DB::insert(
-                'INSERT INTO mdl_org_unit_user (org_id, user_id, role, timecreated) VALUES (?, ?, ?, ?)',
-                [$oid, $userId, $role, time()]
-            );
-        }
+        // Add user ONLY to the selected organization (not children)
+        DB::insert(
+            'INSERT INTO mdl_org_unit_user (org_id, user_id, role, timecreated) VALUES (?, ?, ?, ?)',
+            [$orgId, $userId, $role, time()]
+        );
         return true;
     }
 
     public static function removeUserFromOrganization(int $orgId, int $userId): bool
     {
-        $orgIds = self::getOrgAndChildIds($orgId);
-        foreach ($orgIds as $oid) {
-            DB::delete('DELETE FROM mdl_org_unit_user WHERE org_id = ? AND user_id = ?', [$oid, $userId]);
-        }
+        // Only remove from the selected organization (not children)
+        DB::delete('DELETE FROM mdl_org_unit_user WHERE org_id = ? AND user_id = ?', [$orgId, $userId]);
         return true;
     }
 
@@ -176,30 +173,18 @@ class OrganizationService
 
     public static function getAvailableOrganizationUsers(int $orgId): array
     {
-        $orgIds = self::getOrgAndChildIds($orgId);
-
-        if (empty($orgIds)) {
-            return DB::select("
-                SELECT id, firstname, lastname, email
-                FROM mdl_user
-                WHERE deleted = 0 AND suspended = 0
-                ORDER BY firstname ASC
-            ");
-        }
-
-        $placeholders = implode(',', array_fill(0, count($orgIds), '?'));
+        // Only return users who are NOT in ANY organization (1 user = 1 department)
         return DB::select("
-            SELECT id, firstname, lastname, email
-            FROM mdl_user
-            WHERE deleted = 0 AND suspended = 0
-            AND id NOT IN (
+            SELECT u.id, u.firstname, u.lastname, u.email
+            FROM mdl_user u
+            WHERE u.deleted = 0 AND u.suspended = 0
+            AND u.id NOT IN (
                 SELECT DISTINCT user_id FROM mdl_org_unit_user
-                WHERE org_id IN ($placeholders)
             )
-            ORDER BY firstname ASC
-        ", $orgIds);
+            ORDER BY u.firstname ASC
+        ");
     }
-
+    
     private static function getOrgAndChildIds(int $parentId): array
     {
         $ids = [$parentId];

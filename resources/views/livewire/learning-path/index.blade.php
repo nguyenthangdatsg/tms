@@ -30,7 +30,7 @@
                             <th class="px-3 py-3">{{ __t('learning_path_name') }}</th>
                             <th class="px-3 py-3 hide-mobile">{{ __t('start_date') }}</th>
                             <th class="px-3 py-3 hide-mobile">{{ __t('end_date') }}</th>
-                            <!--th class="px-3 py-3 hide-mobile">{{ __t('credit') }}</th-->
+                            <th class="px-3 py-3 hide-mobile">{{ __t('credit') }}</th>
                             <th class="px-3 py-3">{{ __t('participants') }}</th>
                             <th class="px-3 py-3">{{ __t('status') }}</th>
                             <th class="px-3 py-3 text-center">{{ __t('actions') }}</th>
@@ -43,7 +43,7 @@
                             <td class="px-3 py-3 fw-medium">{{ $path->name }}</td>
                             <td class="px-3 py-3 hide-mobile">{{ $path->startdate ? date('d/m/Y', $path->startdate) : '-' }}</td>
                             <td class="px-3 py-3 hide-mobile">{{ $path->enddate ? date('d/m/Y', $path->enddate) : '-' }}</td>
-                            <!--td class="px-3 py-3 hide-mobile">{{ $path->credit ?? 0 }}</td-->
+                            <td class="px-3 py-3 hide-mobile">{{ $path->total_credit ?? 0 }}</td>
                             <td class="px-3 py-3">
                                 <span class="badge bg-info">{{ $path->enrolled_count ?? 0 }}</span>
                             </td>

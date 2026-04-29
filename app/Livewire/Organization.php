@@ -29,10 +29,10 @@ class Organization extends Component
     public $userSearch = '';
     
     public $orgTypes = [
-        'company' => 'Công ty',
-        'division' => 'Khối/Bộ phận',
-        'department' => 'Phòng ban',
-        'team' => 'Nhóm/Team',
+        'company' => 'Cong ty',
+        'division' => 'Khoi/Bo phan',
+        'department' => 'Phong ban',
+        'team' => 'Nhom/Team',
     ];
 
     public function mount()
@@ -44,8 +44,6 @@ class Organization extends Component
     {
         $moodle = app('moodle');
         $this->flatUnits = $moodle->getOrganizationUnits();
-        
-        // Build tree with member counts
         $this->orgTree = $this->buildTreeWithCounts($moodle, $moodle->getOrganizationUnits(), 0);
     }
     
@@ -62,12 +60,6 @@ class Organization extends Component
         return $tree;
     }
     
-    public function getMemberCount($unitId)
-    {
-        $moodle = app('moodle');
-        return $moodle->getOrganizationUserCount($unitId);
-    }
-
     public function openAddModal($parentId = 0)
     {
         $this->editingUnit = null;
@@ -116,10 +108,10 @@ class Organization extends Component
         
         if ($this->editingUnit) {
             $moodle->updateOrganizationUnit($this->editingUnit->id, $this->formData);
-            $this->dispatch('browser', ['alert' => ['type' => 'success', 'message' => 'Đã cập nhật đơn vị tổ chức']]);
+            $this->dispatch('browser', ['alert' => ['type' => 'success', 'message' => 'Da cap nhat don vi to chuc']]);
         } else {
             $moodle->createOrganizationUnit($this->formData);
-            $this->dispatch('browser', ['alert' => ['type' => 'success', 'message' => 'Đã thêm đơn vị tổ chức']]);
+            $this->dispatch('browser', ['alert' => ['type' => 'success', 'message' => 'Da them don vi to chuc']]);
         }
         
         $this->closeModal();
@@ -143,7 +135,7 @@ class Organization extends Component
             $moodle->deleteOrganizationUnit($this->confirmDeleteId);
             $this->confirmDeleteId = null;
             $this->loadOrganization();
-            $this->dispatch('browser', ['alert' => ['type' => 'success', 'message' => 'Đã xóa đơn vị tổ chức']]);
+            $this->dispatch('browser', ['alert' => ['type' => 'success', 'message' => 'Da xoa don vi to chuc']]);
         }
     }
 
@@ -155,9 +147,7 @@ class Organization extends Component
         $this->userSearch = '';
         
         $moodle = app('moodle');
-        // Current members: include users from child orgs (for divisions and company)
         $this->orgUsers = $moodle->getAllOrganizationUsers($orgId);
-        // Available users: exclude users already in this org or its children
         $this->allUsers = $moodle->getAvailableOrganizationUsers($orgId);
         
         $this->showUsersModal = true;
@@ -170,12 +160,27 @@ class Organization extends Component
         $this->selectedOrgName = '';
         $this->orgUsers = [];
         $this->allUsers = [];
+        
+        // Refresh org tree to update member counts
+        $this->loadOrganization();
+    }
+
+    public function toggleUserSelection($userId)
+    {
+        $userId = (int)$userId;
+        $key = array_search($userId, $this->selectedUserIds);
+        if ($key !== false) {
+            unset($this->selectedUserIds[$key]);
+            $this->selectedUserIds = array_values($this->selectedUserIds);
+        } else {
+            $this->selectedUserIds[] = $userId;
+        }
     }
 
     public function addSelectedUsers()
     {
         if (!$this->selectedOrgId || empty($this->selectedUserIds)) {
-            $this->dispatch('browser', ['alert' => ['type' => 'warning', 'message' => 'Vui lòng chọn người dùng']]);
+            $this->dispatch('browser', ['alert' => ['type' => 'warning', 'message' => 'Vui long chon nguoi dung']]);
             return;
         }
         
@@ -187,12 +192,15 @@ class Organization extends Component
             $addedCount++;
         }
         
-        // Refresh with new logic
         $this->orgUsers = $moodle->getAllOrganizationUsers($this->selectedOrgId);
         $this->allUsers = $moodle->getAvailableOrganizationUsers($this->selectedOrgId);
         $this->selectedUserIds = [];
         
-        $this->dispatch('browser', ['alert' => ['type' => 'success', 'message' => "Đã thêm {$addedCount} người dùng"]]);
+        // Update org tree with new member counts
+        $this->loadOrganization();
+        
+        $msg = 'Da them ' . $addedCount . ' nguoi dung';
+        $this->dispatch('browser', ['alert' => ['type' => 'success', 'message' => $msg]]);
     }
 
     public function removeUserFromOrg($userId)
@@ -204,11 +212,13 @@ class Organization extends Component
         $moodle = app('moodle');
         $moodle->removeUserFromOrganization($this->selectedOrgId, $userId);
         
-        // Refresh with new logic
         $this->orgUsers = $moodle->getAllOrganizationUsers($this->selectedOrgId);
         $this->allUsers = $moodle->getAvailableOrganizationUsers($this->selectedOrgId);
         
-        $this->dispatch('browser', ['alert' => ['type' => 'success', 'message' => 'Đã xóa người dùng khỏi đơn vị']]);
+        // Update org tree with new member counts
+        $this->loadOrganization();
+        
+        $this->dispatch('browser', ['alert' => ['type' => 'success', 'message' => 'Da xoa nguoi dung khoi don vi']]);
     }
 
     public function getFilteredOrgUsersProperty()
@@ -227,7 +237,7 @@ class Organization extends Component
 
     public function getAvailableUsersProperty()
     {
-        $enrolledUserIds = array_column($this->orgUsers, 'user_id');
+        $enrolledUserIds = array_column($this->orgUsers, 'id');
         
         $users = array_filter($this->allUsers, function($user) use ($enrolledUserIds) {
             return !in_array($user->id, $enrolledUserIds);

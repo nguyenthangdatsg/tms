@@ -12,7 +12,6 @@ class LearningPath extends Component
             'formData.name' => 'required|string|max:255',
             'formData.startdate' => 'nullable|date',
             'formData.enddate' => 'nullable|date|after_or_equal:formData.startdate',
-            // 'formData.credit' => 'nullable|numeric|min:0', // TEMPORARILY DISABLED
         ];
         
         if (!empty($this->notificationData['day_frequency_enable'])) {
@@ -34,6 +33,7 @@ class LearningPath extends Component
     public $availableCatalogueCourses = [];
     public $showCoursesModal = false;
     public $activeCourseTab = 'special';
+    public $addingCourseData = [];
     
     public $specialSearch = '';
     public $catalogueSearch = '';
@@ -70,11 +70,11 @@ class LearningPath extends Component
     {
         $this->editingPath = null;
         $this->formData = [
-'name' => '',
+            'name' => '',
             'description' => '',
             'startdate' => '',
             'enddate' => '',
-            // 'credit' => 0, // TEMPORARILY DISABLED
+            'credit' => 0,
         ];
         $this->showModal = true;
     }
@@ -175,8 +175,9 @@ class LearningPath extends Component
         $this->activeCourseTab = 'special';
         $this->specialSearch = '';
         $this->catalogueSearch = '';
+        $this->js('window.location.reload()');
     }
-
+    
     public function setActiveCourseTab($tab)
     {
         $this->activeCourseTab = $tab;
@@ -260,6 +261,26 @@ class LearningPath extends Component
         $moodle->updateLearningPathLineRequired($lineId, $required);
         
         $this->pathCourses = $moodle->getLearningPathCourses($this->selectedPathId);
+    }
+    
+    public function updateCourseCredit($lineId, $credit)
+    {
+        $moodle = app('moodle');
+        $moodle->updateLearningPathLineCredit($lineId, $credit);
+        
+        $this->pathCourses = $moodle->getLearningPathCourses($this->selectedPathId);
+    }
+    
+    public function saveCourses()
+    {
+        $this->showCoursesModal = false;
+        $this->selectedPathId = null;
+        $this->pathCourses = [];
+        $this->activeCourseTab = 'special';
+        $this->specialSearch = '';
+        $this->catalogueSearch = '';
+        $this->loadLearningPaths();
+        $this->dispatch('browser', ['alert' => ['type' => 'success', 'message' => 'Đã cập nhật khóa học']]);
     }
     
     public function openEnrollModal($pathId)
